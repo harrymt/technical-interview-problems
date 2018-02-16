@@ -1,16 +1,235 @@
 
+
+function romanNumeralEncoder(n) {
+  const symbols = [
+    { value: 1000, symbol: 'M'},
+    { value: 900, symbol: 'CM'},
+    { value: 500, symbol: 'D'},
+    { value: 400, symbol: 'CD'},
+    { value: 100, symbol: 'C'},
+    { value: 90, symbol: 'XC'},
+    { value: 50, symbol: 'L'},
+    { value: 40, symbol: 'XL'},
+    { value: 10, symbol: 'X'},
+    { value: 9, symbol: 'IX'},
+    { value: 5, symbol: 'V'},
+    { value: 4, symbol: 'IV'},
+    { value: 1, symbol: 'I'}
+  ];
+
+  let result = '';
+  let sum = n;
+  while (sum > 0) {
+    for (let i = 0; i < symbols.length; i++) {
+      if (sum >= symbols[i].value) {
+        result += symbols[i].symbol;
+        sum -= symbols[i].value;
+        break;
+      }
+    }
+  }
+  return result;
+}
+
+
 function testToCsvText() {
   console.log(toCsvText([
     [ 0, 1, 2, 3, 45 ],
     [ 10,11,12,13,14 ],
     [ 20,21,22,23,24 ],
     [ 30,31,32,33,34 ]
-   ] ), '0,1,2,3,45\n10,11,12,13,14\n20,21,22,23,24\n30,31,32,33,34'));
+   ] ), '0,1,2,3,45\n10,11,12,13,14\n20,21,22,23,24\n30,31,32,33,34');
 }
 
-function toCsvText(array) {
-  // TODO
+let toCsvText = a => a.join('\n');
+
+/**
+ * Calculates the haversine distance between point A, and B.
+ * @param {number[]} latlngA [lat, lng] point A
+ * @param {number[]} latlngB [lat, lng] point B
+ * @param {boolean} isMiles If we are using miles, else km.
+ */
+function haversineDistance(latlngA, latlngB) {
+  function toRad(x) {
+    return x * (Math.PI / 180); // for more precise, but slower estimation
+    // return x * 0.0174533; // fast estimation
+  }
+  // const R = 6371; // earth radius in km
+  const R = 3390; // mars radius in km
+  const dLat = toRad(latlngB[1] - latlngA[1]);
+  const dLatSin = Math.sin(dLat / 2);
+  const dLon = toRad(latlngB[0] - latlngA[0]);
+  const dLonSin = Math.sin(dLon / 2);
+
+  const a = (dLatSin * dLatSin) +
+            (Math.cos(toRad(latlngA[0])) * Math.cos(toRad(latlngB[0])) * dLonSin * dLonSin);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
+
+function dmsToLatLng(dms) {
+  return dms.split(', ').map(el => el.split('° ')).map((arr) => {
+    let amount = arr[0].split('.').map((val, i) => {
+      val = Number(val);
+      if (i === 1) { return val / 60; }
+      if (i === 2) { return val / (60 * 60); }
+      return val;
+    }).reduce((prev, curr) => Number.parseFloat(prev + curr).toFixed(4));
+    return amount * ((arr[1] === 'S' || arr[1] === 'W') ? -1 : 1);
+  });
+}
+
+function calcHaversineDistance(lat1, lat2, lon1, lon2, R) {
+  const dlon = lon2 - lon1;
+  const dlat = lat2 - lat1;
+  const a = Math.pow(Math.sin(dlat / 2), 2) +
+          Math.cos(lat1) *
+          Math.cos(lat2) *
+          Math.pow(Math.sin(dlon / 2), 2);
+  let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function saveMark(c1, c2) {
+  function toRad(x) {
+    return x * (Math.PI / 180); // for more precise, but slower estimation
+    // return x * 0.0174533; // fast estimation
+  }
+
+  const pointC1 = dmsToLatLng(c1);
+  const pointC2 = dmsToLatLng(c2);
+  let distance = haversineDistance(pointC1, pointC2);
+  distance = calcHaversineDistance(toRad(pointC1[0]), toRad(pointC1[1]), toRad(pointC2[0]), toRad(pointC2[1]), 3390);
+  const distRounded = Math.round(distance / 10) * 10; // fine
+
+  return `${distRounded}KM`;
+}
+
+function testSaveMark() {
+  console.log(saveMark('48.23° N, 89.10° E', '48.84° N, 89.40° E'), '30KM');
+  console.log(saveMark('52.10° S, 56.25° W', '52.10° N, 56.25° W'), '6160KM');
+  console.log(saveMark('11.28° S, 78.98° E', '21.28° S, 75.56° E'), '620KM');
+}
+
+// fine
+function testDMStoLatLng() {
+  console.log('test1: ', dmsToLatLng('48.23° N, 89.10° E'), [48.38333333, 89.16666667]);
+  console.log('test2: ', dmsToLatLng('48.84° N, 89.40° E'), [49.40000000, 89.66666667]);
+
+  console.log('test3: ', dmsToLatLng('52.10° S, 56.25° W'), [-52.16666667, -56.41666667]);
+  console.log('test4: ', dmsToLatLng('52.10° N, 56.25° W'), '');
+
+  console.log('test5: ', dmsToLatLng('11.28° S, 78.98° E'), '');
+  console.log('test6: ', dmsToLatLng('21.28° S, 75.56° E'), '');
+}
+
+
+class TreeNode {
+  constructor(d) {
+    this.data = d;
+    this.childrenAmount = 0;
+    this.parent = undefined;
+    this.left = undefined;
+    this.right = undefined;
+  }
+}
+
+class BinarySearchTree {
+  constructor() {
+    this.root = undefined;
+  }
+
+  add(data, node) {
+    // If not at root
+    let temp = node;
+    let childrenCount = 0;
+    while (temp.parent !== undefined) {
+      childrenCount += temp.childrenAmount;
+      temp = temp.parent;
+    }
+
+    childrenCount++;
+    node.childrenAmount = childrenCount;
+    const newNode = new TreeNode(data);
+    newNode.parent = node;
+    newNode.childrenAmount = childrenCount;
+
+    if (node.data > data) {
+      node.l = newNode;
+    } else {
+      node.r = newNode;
+    }
+    return newNode;
+  }
+
+
+  push(data) {
+    if (this.root !== undefined) {
+      return this.add(data, this.root);
+    }
+    this.root = new TreeNode(data);
+    return this.root;
+  }
+}
+
+/**
+ * That given an array arr, you have to return the amount
+ * of numbers that are smaller than arr[i] to the right.
+ *
+ * O(N^2)
+ * @param {number[]} nums To process.
+ */
+function smaller(nums) {
+  const bst = new BinarySearchTree();
+
+  // Add to binary search tree
+  nums.forEach(val => bst.push(val));
+  console.log('nums:', nums);
+  // return nums.map((val, i) => nums.slice(i).filter(curr => curr < val).length);
+}
+
+
+/**
+ * That given an array arr, you have to return the amount
+ * of numbers that are smaller than arr[i] to the right.
+ *
+ * O(N^2)
+ * @param {number[]} nums To process.
+ */
+function smallerSlow(nums) {
+  return nums.map((val, i) => nums.slice(i).filter(curr => curr < val).length);
+}
+
+/**
+ * That given an array arr, you have to return the amount
+ * of numbers that are smaller than arr[i] to the right.
+ *
+ * O(N^2)
+ * @param {number[]} nums To process.
+ */
+function smallerON2(nums) {
+  for (let n = 0; n < nums.length; n++) {
+    let biggerThanN = 0;
+    for (let n2 = n; n2 < nums.length; n2++) {
+      if (nums[n2] < nums[n]) {
+        biggerThanN++;
+      }
+    }
+    nums[n] = biggerThanN;
+  }
+
+  return nums;
+}
+
+function testSmaller() {
+  console.log(smaller([5, 4, 3, 2, 1]), [4, 3, 2, 1, 0]);
+  console.log(smaller([1, 2, 3]), [0, 0, 0]);
+  console.log(smaller([1, 2, 0]), [1, 1, 0]);
+  console.log(smaller([1, 2, 1]), [0, 1, 0]);
+  console.log(smaller([1, 1, -1, 0, 0]), [3, 3, 0, 0, 0]);
+  console.log(smaller([5, 4, 7, 9, 2, 4, 4, 5, 6]), [4, 1, 5, 5, 0, 0, 0, 0, 0]);
+}
+
 
 
 /**
@@ -155,7 +374,7 @@ function convert(input, source, target) {
 
 
 function permutationsTest() {
-  console.log(permutations('a'), ['a'], "|");
+  console.log(permutations('a'), ['a'], '|');
   console.log(permutations('ab').sort(), ['ab', 'ba'].sort(), "|");
   console.log(permutations('aabb').sort(), ['aabb', 'abab', 'abba', 'baab', 'baba', 'bbaa'].sort(), "|");
 }
@@ -1066,4 +1285,7 @@ function codewarsXO2(str) {
 // testIsValidIP();
 // stripCommentsTest();
 // permutationsTest();
-testNextbigger();
+// testSaveMark();
+testToCsvText();
+// testDMStoLatLng();
+// testSmaller();
