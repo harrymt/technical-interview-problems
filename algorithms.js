@@ -7,6 +7,23 @@ const sortEmotions = (arr, order) => {
   return arr.sort((a, b) => (order) ? m.get(b) - m.get(a) : m.get(a) - m.get(b));
 };
 
+const consonantValue = s => {
+  const a = "abcdefghijklmnopqrstuvwxyz".split('');
+  const v = "aeiou".split('');
+  const isVowel = n => v.includes(n);
+  let x = 0;
+  let max = 0;
+  s.split('').forEach(el => {
+    if (isVowel(el)) {
+      if (x > max) { max = x; }
+      x = 0;
+    } else {
+      x += a.indexOf(el) + 1
+    }
+  });
+  return max;
+};
+
 function testStringMix() {
   Test.assert.equal(mixOld("Are they here", "yes, they are here"), "2:eeeee/2:yy/=:hh/=:rr")
   Test.assert.equal(mixOld("looping is fun but dangerous", "less dangerous than coding"), "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg")
