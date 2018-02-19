@@ -2,6 +2,11 @@
 const Test = require('chai');
 
 
+const sortEmotions = (arr, order) => {
+  const m = new Map([[':D', 4], [':)', 3], [':|', 2], [':(', 1], ['T_T', 0]]);
+  return arr.sort((a, b) => (order) ? m.get(b) - m.get(a) : m.get(a) - m.get(b));
+};
+
 function testStringMix() {
   Test.assert.equal(mixOld("Are they here", "yes, they are here"), "2:eeeee/2:yy/=:hh/=:rr")
   Test.assert.equal(mixOld("looping is fun but dangerous", "less dangerous than coding"), "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg")
