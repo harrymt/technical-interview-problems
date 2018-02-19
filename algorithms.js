@@ -24,6 +24,39 @@ const consonantValue = s => {
   return max;
 };
 
+function primeParisReversion(a, b) {
+  let r = [];
+  while (a < b) {
+    if (isPrime(a)) r.push(a);
+    a++;
+  }
+
+  let permutations = [];
+  r.forEach((el, i) => {
+    let nested = i;
+    while (nested < r.length) {
+      permutations.push([el, r[nested]]);
+      nested++;
+    }
+  });
+  return permutations.filter((val, i) => {
+    let prime = Number(String(val[0] * val[1]).split('').reduce((prev, curr) => Number(prev) + Number(curr)));
+    return r.includes(prime) || isPrime(prime);
+  }).length;
+}
+
+const isPrime = n => {
+  if (n == 2 || n == 3) return true;
+  if (n == 1 || n % 2 == 0) return false;
+  let div = 3; let limit = Math.sqrt(n);
+  while (div <= limit) {
+    if (n % div == 0) return false;
+    div += 2;
+  }
+  return true;
+}
+
+
 function testStringMix() {
   Test.assert.equal(mixOld("Are they here", "yes, they are here"), "2:eeeee/2:yy/=:hh/=:rr")
   Test.assert.equal(mixOld("looping is fun but dangerous", "less dangerous than coding"), "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg")
