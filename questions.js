@@ -30,3 +30,8 @@
         var a = b = 3; // translates to the following when not 'use strict', otherwise its a runtime error
         b = 3;
         var a = b;
+
+// How to get an array index, if it doesn't have anything in there
+    // answer
+        let value = (s1[letter] || 0);
+
