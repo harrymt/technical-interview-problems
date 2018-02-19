@@ -1,4 +1,93 @@
 
+const Test = require('chai');
+
+
+function testStringMix() {
+  Test.assert.equal(mixOld("Are they here", "yes, they are here"), "2:eeeee/2:yy/=:hh/=:rr")
+  Test.assert.equal(mixOld("looping is fun but dangerous", "less dangerous than coding"), "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg")
+  Test.assert.equal(mixOld(" In many languages", " there's a pair of functions"), "1:aaa/1:nnn/1:gg/2:ee/2:ff/2:ii/2:oo/2:rr/2:ss/2:tt")
+  Test.assert.equal(mixOld("Lords of the Fallen", "gamekult"), "1:ee/1:ll/1:oo")
+  Test.assert.equal(mixOld("codewars", "codewars"), "")
+  Test.assert.equal(mixOld("A generation must confront the looming ", "codewarrs"), "1:nnnnn/1:ooooo/1:tttt/1:eee/1:gg/1:ii/1:mm/=:rr")
+
+}
+
+function mix(s1, s2) {
+  let counter = str => {
+    return str.replace(/[a-zA-Z]+/i).split('').sort().reduce((sum, letter) => {
+      sum[letter] = 1 + (sum[letter]||0);
+      return sum;
+    }, {});
+  };
+  s1 = counter(s1), s2 = counter(s2);
+
+  // Create list of all characters to iterate over
+  const allLetters = new Set(Object.keys(s1).concat(Object.keys(s2)));
+
+  let r = []; let str = [0, 1, 2];
+  allLetters.forEach((letter) => {
+    let c1 = (s1[letter] || 0);
+    let c2 = (s2[letter] || 0);
+    let count = Math.max(c1, c2);
+    if (count > 1) {
+      r.push(`${(c1 === c2) ? '=' : count === c1 ? 1 : 2}:${letter.repeat(count)}`);
+    }
+  });
+  return r.sort((a, b) => b.length - a.length ||  (a < b ? -1 : 1)).join('/');
+}
+
+
+function mixOld(s1, s2) {
+  let s1occur = findLowercaseOccurances(s1, '1');
+  let s2occur = findLowercaseOccurances(s2, '2');
+  let s1joined = s1occur.concat(s2occur);
+  let occurances = s1joined.sort((a, b) => b.amount - a.amount);
+  let result = new Map();
+  for (let i = 0; i < occurances.length; i++) {
+    if (occurances[i].amount <= 1) { continue; }
+    if (result.has(occurances[i].letter)) {
+      const oldAmount = result.get(occurances[i].letter).amount;
+      if (oldAmount === occurances[i].amount) {
+        result.set(occurances[i].letter, { str: occurances[i].str, amount: occurances[i].amount, equal: true});
+      } else if (oldAmount < occurances[i].amount) {
+        result.set(occurances[i].letter, { str: occurances[i].str, amount: occurances[i].amount, equal: false});
+      }
+    } else {
+      result.set(occurances[i].letter, { str: occurances[i].str, amount: occurances[i].amount, equal: false});
+    }
+  }
+  // Sort string
+  result = Array.from(result).sort((a, b) => {
+    if (a[1].amount < b[1].amount) return 1;
+    if (a[1].amount > b[1].amount) return -1;
+    if (a[1].equal && !b[1].equal) return 1;
+    if (!a[1].equal && b[1].equal) return -1;
+    if (a[1].equal && b[1].equal) {
+      if (a[0] > b[0]) return 1;
+      if (a[0] < b[0]) return -1;
+      return 0;
+    }
+    if (`${a[1].str}:${a[0]}` > `${b[1].str}:${b[0]}`) return 1;
+    if (`${a[1].str}:${a[0]}` < `${b[1].str}:${b[0]}`) return -1;
+    return 0
+  });
+
+  // Format string
+  let output = result.map(el => {
+    return `${(el[1].equal) ? '=' : el[1].str}:${el[0].repeat(el[1].amount)}`;
+  });
+
+  console.log(s1occur, s2occur);
+
+  return output.join('/');
+}
+
+let findLowercaseOccurances = str => {
+  return str.replace(/[a-zA-Z]+/i).split('').sort().reduce((sum, letter) => {
+    sum[letter] = 1 + (sum[letter]||0);
+    return sum;
+  }, {});
+};
 
 function romanNumeralEncoder(n) {
   const symbols = [
@@ -1286,6 +1375,9 @@ function codewarsXO2(str) {
 // stripCommentsTest();
 // permutationsTest();
 // testSaveMark();
-testToCsvText();
+// testToCsvText();
 // testDMStoLatLng();
 // testSmaller();
+// testStringMix();
+// findLCOccurancesTest();
+// testStringMix();
