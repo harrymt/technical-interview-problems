@@ -2,6 +2,11 @@
 const Test = require('chai');
 
 
+const isPowerOfTwo = n => {
+  while(n > 1) n /= 2;
+  return n === 1;
+}
+
 const sortEmotions = (arr, order) => {
   const m = new Map([[':D', 4], [':)', 3], [':|', 2], [':(', 1], ['T_T', 0]]);
   return arr.sort((a, b) => (order) ? m.get(b) - m.get(a) : m.get(a) - m.get(b));
